@@ -200,7 +200,7 @@
             gap: 5px;
         }
 
-        /* 店铺广告花费录入样式 */
+        /* 店铺广告花费录入样式（按店铺单独录入） */
         .shop-ad-cost {
             margin-bottom: 20px;
         }
@@ -933,7 +933,7 @@
                     </div>
                 </div>
 
-                <!-- 店铺广告花费录入 -->
+                <!-- 店铺广告花费录入（按店铺单独录入） -->
                 <div class="shop-ad-cost">
                     <h3>店铺广告花费录入（¥）</h3>
                     <div class="ad-cost-list" id="adCostList">
@@ -1314,9 +1314,9 @@
             document.getElementById("statEndDate").max = today;
             // 初始化自定义日期的联动限制
             syncCustomDate("start");
-            // 初始化店铺广告花费录入
+            // 初始化店铺广告花费录入（按店铺单独）
             renderShopAdCost();
-            // 初始化统计图
+            // 初始化统计图（初始清零）
             initStatisticsChart();
             renderStatisticsChart();
         };
@@ -1343,7 +1343,7 @@
             document.getElementById(`${dimension}DateItem`).classList.add("active");
         }
 
-        // 新增：自定义日期联动（开始日期≤结束日期，且不超过今日）
+        // 自定义日期联动（开始日期≤结束日期，且不超过今日）
         function syncCustomDate(type) {
             const today = new Date().toISOString().split("T")[0];
             const startDateInput = document.getElementById("statStartDate");
@@ -1370,7 +1370,7 @@
             }
         }
 
-        // 新增：自定义日期合法性校验
+        // 自定义日期合法性校验
         function checkCustomDateValid() {
             const startDate = document.getElementById("statStartDate").value;
             const endDate = document.getElementById("statEndDate").value;
@@ -1417,7 +1417,7 @@
             shopList.push(shopName);
             localStorage.setItem("shopList", JSON.stringify(shopList));
             renderShopSelect();
-            // 新增店铺后，重新渲染广告花费录入
+            // 新增店铺后，重新渲染广告花费录入（按店铺单独）
             renderShopAdCost();
             closeShopModal();
             alert("店铺新增成功！");
@@ -1437,7 +1437,7 @@
             phpShopSelect.innerHTML = shopSelectHtml;
         }
 
-        // 渲染店铺广告花费录入
+        // 渲染店铺广告花费录入（按店铺单独）
         function renderShopAdCost() {
             const adCostList = document.getElementById("adCostList");
             let shopList = JSON.parse(localStorage.getItem("shopList")) || [];
@@ -1460,7 +1460,7 @@
             });
         }
 
-        // 保存店铺广告花费
+        // 保存店铺广告花费（按店铺单独保存）
         function saveShopAdCost() {
             let shopList = JSON.parse(localStorage.getItem("shopList")) || [];
             if (shopList.length === 0) {
@@ -1733,430 +1733,4 @@
             const cancelDeduct = (orderStatus === "取消" || orderStatus === "取消（已发货）") ? (goodsPrice * 0.5) : 0;
 
             const profit = incomeCny - goodsPrice - firstTripFee - brushPay - shipPrice - cancelDeduct;
-            document.getElementById("thbProfitCny").value = profit.toFixed(2);
-            return profit;
-        }
-
-        function calculatePhpProfit() {
-            const incomeCny = calculatePhpIncomeCny();
-            const goodsPrice = parseFloat(document.getElementById("phpGoodsPriceCny").value) || 0;
-            const firstTripFee = parseFloat(document.getElementById("phpFirstTripFeeCny").value) || 0;
-            const brushPay = parseFloat(document.getElementById("phpBrushPay").value) || 0;
-            const shipPrice = parseFloat(document.getElementById("phpShipPriceCny").value) || 0;
-            const orderStatus = document.getElementById("phpOrderStatus").value;
-
-            // 取消订单额外扣减（扣减商品价格的50%，可调整）
-            const cancelDeduct = (orderStatus === "取消" || orderStatus === "取消（已发货）") ? (goodsPrice * 0.5) : 0;
-
-            const profit = incomeCny - goodsPrice - firstTripFee - brushPay - shipPrice - cancelDeduct;
-            document.getElementById("phpProfitCny").value = profit.toFixed(2);
-            return profit;
-        }
-
-        // 7. 泰铢订单新增
-        function addThbOrder() {
-            const shopName = document.getElementById("thbShopSelect").value.trim();
-            const orderStatus = document.getElementById("thbOrderStatus").value;
-            const orderTime = document.getElementById("thbOrderTime").value.trim();
-            const orderNum = document.getElementById("thbOrderNum").value.trim();
-            const orderContent = document.getElementById("thbOrderContent").value.trim();
-            const goodsPriceCny = document.getElementById("thbGoodsPriceCny").value.trim();
-            const firstTripFeeCny = document.getElementById("thbFirstTripFeeCny").value.trim();
-            const orderAmountThb = document.getElementById("thbOrderAmount").value.trim() || "0.00";
-            const orderAmountCny = calculateThbOrderCny().toFixed(2);
-            const isBrushYes = document.querySelector(`input[name="thbIsBrush"][value="yes"]`).checked;
-            const brushPay = isBrushYes ? document.getElementById("thbBrushPay").value.trim() : "0.00";
-            const shipPriceCny = document.getElementById("thbShipPriceCny").value.trim();
-            const incomeAmountThb = document.getElementById("thbIncomeAmount").value.trim() || "0.00";
-            const incomeAmountCny = calculateThbIncomeCny().toFixed(2);
-            const profitCny = calculateThbProfit().toFixed(2);
-            const orderImgs = [...selectedImgBase64];
-
-            // 表单验证
-            const requiredFields = [shopName, orderStatus, orderTime, orderNum, orderContent,
-                goodsPriceCny, firstTripFeeCny, shipPriceCny];
-            // 刷单为"是"时，刷单金额必填
-            if (isBrushYes && !brushPay) {
-                alert("选择刷单后，刷单+代付金额不能为空！");
-                return;
-            }
-            if (requiredFields.some(field => !field)) {
-                alert("除币种金额和商品图片外，其他必填字段不能为空，请完整填写！");
-                return;
-            }
-
-            const newOrder = {
-                shopName: shopName,
-                orderStatus: orderStatus,
-                orderTime: orderTime,
-                orderNum: orderNum,
-                orderContent: orderContent,
-                orderImgs: orderImgs.length > 0 ? orderImgs : ["https://via.placeholder.com/60?text=无图片"],
-                goodsPriceCny: parseFloat(goodsPriceCny).toFixed(2),
-                firstTripFeeCny: parseFloat(firstTripFeeCny).toFixed(2),
-                orderAmountThb: parseFloat(orderAmountThb).toFixed(2),
-                orderAmountPhp: "0.00",
-                orderAmountCny: orderAmountCny,
-                brushPay: parseFloat(brushPay).toFixed(2),
-                shipPriceCny: parseFloat(shipPriceCny).toFixed(2),
-                incomeAmountThb: parseFloat(incomeAmountThb).toFixed(2),
-                incomeAmountCny: incomeAmountCny,
-                profitCny: profitCny,
-                currencyType: "thb"
-            };
-
-            // 保存到本地存储
-            let thbOrderList = JSON.parse(localStorage.getItem("thbOrderList")) || [];
-            thbOrderList.push(newOrder);
-            localStorage.setItem("thbOrderList", JSON.stringify(thbOrderList));
-
-            // 重新渲染订单列表
-            renderThbOrderList();
-            // 重置表单
-            resetThbForm();
-            alert("泰铢订单新增成功！");
-        }
-
-        // 8. 菲律宾比索订单新增
-        function addPhpOrder() {
-            const shopName = document.getElementById("phpShopSelect").value.trim();
-            const orderStatus = document.getElementById("phpOrderStatus").value;
-            const orderTime = document.getElementById("phpOrderTime").value.trim();
-            const orderNum = document.getElementById("phpOrderNum").value.trim();
-            const orderContent = document.getElementById("phpOrderContent").value.trim();
-            const goodsPriceCny = document.getElementById("phpGoodsPriceCny").value.trim();
-            const firstTripFeeCny = document.getElementById("phpFirstTripFeeCny").value.trim();
-            const orderAmountPhp = document.getElementById("phpOrderAmount").value.trim() || "0.00";
-            const orderAmountCny = calculatePhpOrderCny().toFixed(2);
-            const isBrushYes = document.querySelector(`input[name="phpIsBrush"][value="yes"]`).checked;
-            const brushPay = isBrushYes ? document.getElementById("phpBrushPay").value.trim() : "0.00";
-            const shipPriceCny = document.getElementById("phpShipPriceCny").value.trim();
-            const incomeAmountPhp = document.getElementById("phpIncomeAmount").value.trim() || "0.00";
-            const incomeAmountCny = calculatePhpIncomeCny().toFixed(2);
-            const profitCny = calculatePhpProfit().toFixed(2);
-            const orderImgs = [...selectedImgBase64];
-
-            // 表单验证
-            const requiredFields = [shopName, orderStatus, orderTime, orderNum, orderContent,
-                goodsPriceCny, firstTripFeeCny, shipPriceCny];
-            // 刷单为"是"时，刷单金额必填
-            if (isBrushYes && !brushPay) {
-                alert("选择刷单后，刷单+代付金额不能为空！");
-                return;
-            }
-            if (requiredFields.some(field => !field)) {
-                alert("除币种金额和商品图片外，其他必填字段不能为空，请完整填写！");
-                return;
-            }
-
-            const newOrder = {
-                shopName: shopName,
-                orderStatus: orderStatus,
-                orderTime: orderTime,
-                orderNum: orderNum,
-                orderContent: orderContent,
-                orderImgs: orderImgs.length > 0 ? orderImgs : ["https://via.placeholder.com/60?text=无图片"],
-                goodsPriceCny: parseFloat(goodsPriceCny).toFixed(2),
-                firstTripFeeCny: parseFloat(firstTripFeeCny).toFixed(2),
-                orderAmountThb: "0.00",
-                orderAmountPhp: parseFloat(orderAmountPhp).toFixed(2),
-                orderAmountCny: orderAmountCny,
-                brushPay: parseFloat(brushPay).toFixed(2),
-                shipPriceCny: parseFloat(shipPriceCny).toFixed(2),
-                incomeAmountPhp: parseFloat(incomeAmountPhp).toFixed(2),
-                incomeAmountCny: incomeAmountCny,
-                profitCny: profitCny,
-                currencyType: "php"
-            };
-
-            // 保存到本地存储
-            let phpOrderList = JSON.parse(localStorage.getItem("phpOrderList")) || [];
-            phpOrderList.push(newOrder);
-            localStorage.setItem("phpOrderList", JSON.stringify(phpOrderList));
-
-            // 重新渲染订单列表
-            renderPhpOrderList();
-            // 重置表单
-            resetPhpForm();
-            alert("菲律宾比索订单新增成功！");
-        }
-
-        // 9. 重置表单
-        function resetThbForm() {
-            document.getElementById("thbShopSelect").value = "";
-            document.getElementById("thbOrderStatus").value = "未发货";
-            document.getElementById("thbOrderTime").value = "";
-            document.getElementById("thbOrderNum").value = "";
-            document.getElementById("thbOrderContent").value = "";
-            document.getElementById("thbSelectedImgs").innerHTML = "";
-            document.getElementById("thbGoodsPriceCny").value = "";
-            document.getElementById("thbFirstTripFeeCny").value = "";
-            document.getElementById("thbOrderAmount").value = "";
-            document.getElementById("thbOrderAmountCny").value = "";
-            document.querySelector(`input[name="thbIsBrush"][value="no"]`).checked = true;
-            toggleBrushInput("thb");
-            document.getElementById("thbShipPriceCny").value = "";
-            document.getElementById("thbIncomeAmount").value = "";
-            document.getElementById("thbIncomeAmountCny").value = "";
-            document.getElementById("thbProfitCny").value = "";
-            selectedImgBase64 = [];
-        }
-
-        function resetPhpForm() {
-            document.getElementById("phpShopSelect").value = "";
-            document.getElementById("phpOrderStatus").value = "未发货";
-            document.getElementById("phpOrderTime").value = "";
-            document.getElementById("phpOrderNum").value = "";
-            document.getElementById("phpOrderContent").value = "";
-            document.getElementById("phpSelectedImgs").innerHTML = "";
-            document.getElementById("phpGoodsPriceCny").value = "";
-            document.getElementById("phpFirstTripFeeCny").value = "";
-            document.getElementById("phpOrderAmount").value = "";
-            document.getElementById("phpOrderAmountCny").value = "";
-            document.querySelector(`input[name="phpIsBrush"][value="no"]`).checked = true;
-            toggleBrushInput("php");
-            document.getElementById("phpShipPriceCny").value = "";
-            document.getElementById("phpIncomeAmount").value = "";
-            document.getElementById("phpIncomeAmountCny").value = "";
-            document.getElementById("phpProfitCny").value = "";
-            selectedImgBase64 = [];
-        }
-
-        // 10. 渲染订单列表
-        function renderThbOrderList() {
-            const thbOrderTbody = document.getElementById("thbOrderTbody");
-            const thbNoOrderTip = document.getElementById("thbNoOrderTip");
-            let thbOrderList = JSON.parse(localStorage.getItem("thbOrderList")) || [];
-
-            thbOrderTbody.innerHTML = "";
-
-            if (thbOrderList.length === 0) {
-                thbNoOrderTip.style.display = "block";
-                return;
-            }
-
-            thbNoOrderTip.style.display = "none";
-            thbOrderList.forEach(order => {
-                const tr = document.createElement("tr");
-                // 渲染商品图片
-                let imgHtml = "";
-                order.orderImgs.forEach(img => {
-                    imgHtml += `<img src="${img}" class="order-img" alt="商品图片">`;
-                });
-                // 利润颜色样式
-                const profitClass = parseFloat(order.profitCny) >= 0 ? "profit-positive" : "profit-negative";
-                // 订单状态颜色样式
-                let statusClass = "";
-                switch (order.orderStatus) {
-                    case "未发货": statusClass = "status-unshipped"; break;
-                    case "已发货": statusClass = "status-shipped"; break;
-                    case "取消": statusClass = "status-cancel"; break;
-                    case "取消（已发货）": statusClass = "status-cancel-shipped"; break;
-                }
-
-                tr.innerHTML = `
-                    <td>${order.orderTime}</td>
-                    <td>${order.shopName}</td>
-                    <td>${order.orderNum}</td>
-                    <td>${order.orderContent}</td>
-                    <td><div class="order-imgs">${imgHtml}</div></td>
-                    <td>${order.goodsPriceCny}</td>
-                    <td>${order.firstTripFeeCny}</td>
-                    <td>${order.orderAmountThb}</td>
-                    <td>${order.orderAmountCny}</td>
-                    <td>${order.brushPay}</td>
-                    <td>${order.shipPriceCny}</td>
-                    <td>${order.incomeAmountThb}</td>
-                    <td>${order.incomeAmountCny}</td>
-                    <td class="${profitClass}">${order.profitCny}</td>
-                    <td class="${statusClass}">${order.orderStatus}</td>
-                `;
-                thbOrderTbody.appendChild(tr);
-            });
-        }
-
-        function renderPhpOrderList() {
-            const phpOrderTbody = document.getElementById("phpOrderTbody");
-            const phpNoOrderTip = document.getElementById("phpNoOrderTip");
-            let phpOrderList = JSON.parse(localStorage.getItem("phpOrderList")) || [];
-
-            phpOrderTbody.innerHTML = "";
-
-            if (phpOrderList.length === 0) {
-                phpNoOrderTip.style.display = "block";
-                return;
-            }
-
-            phpNoOrderTip.style.display = "none";
-            phpOrderList.forEach(order => {
-                const tr = document.createElement("tr");
-                // 渲染商品图片
-                let imgHtml = "";
-                order.orderImgs.forEach(img => {
-                    imgHtml += `<img src="${img}" class="order-img" alt="商品图片">`;
-                });
-                // 利润颜色样式
-                const profitClass = parseFloat(order.profitCny) >= 0 ? "profit-positive" : "profit-negative";
-                // 订单状态颜色样式
-                let statusClass = "";
-                switch (order.orderStatus) {
-                    case "未发货": statusClass = "status-unshipped"; break;
-                    case "已发货": statusClass = "status-shipped"; break;
-                    case "取消": statusClass = "status-cancel"; break;
-                    case "取消（已发货）": statusClass = "status-cancel-shipped"; break;
-                }
-
-                tr.innerHTML = `
-                    <td>${order.orderTime}</td>
-                    <td>${order.shopName}</td>
-                    <td>${order.orderNum}</td>
-                    <td>${order.orderContent}</td>
-                    <td><div class="order-imgs">${imgHtml}</div></td>
-                    <td>${order.goodsPriceCny}</td>
-                    <td>${order.firstTripFeeCny}</td>
-                    <td>${order.orderAmountPhp}</td>
-                    <td>${order.orderAmountCny}</td>
-                    <td>${order.brushPay}</td>
-                    <td>${order.shipPriceCny}</td>
-                    <td>${order.incomeAmountPhp}</td>
-                    <td>${order.incomeAmountCny}</td>
-                    <td class="${profitClass}">${order.profitCny}</td>
-                    <td class="${statusClass}">${order.orderStatus}</td>
-                `;
-                phpOrderTbody.appendChild(tr);
-            });
-        }
-
-        // 11. 统计图相关函数
-        function initStatisticsChart() {
-            myChart = echarts.init(document.getElementById("statisticsChart"));
-            // 默认配置
-            const defaultOption = {
-                title: {
-                    text: "订单数据统计",
-                    left: "center"
-                },
-                tooltip: {
-                    trigger: "axis"
-                },
-                legend: {
-                    top: "bottom",
-                    left: "center"
-                },
-                grid: {
-                    left: "3%",
-                    right: "4%",
-                    bottom: "15%",
-                    containLabel: true
-                },
-                xAxis: {
-                    type: "category",
-                    data: []
-                },
-                yAxis: {
-                    type: "value"
-                },
-                series: [{
-                    name: "统计数据",
-                    type: "bar",
-                    data: [],
-                    itemStyle: {
-                        color: "#007bff"
-                    }
-                }]
-            };
-            myChart.setOption(defaultOption);
-        }
-
-        function renderStatisticsChart() {
-            const dimension = document.getElementById("statDimension").value;
-            const statType = document.getElementById("statType").value;
-
-            // 自定义日期维度先做合法性校验
-            if (dimension === "custom") {
-                if (!checkCustomDateValid()) {
-                    return;
-                }
-            }
-
-            // 模拟数据（实际可从localStorage中提取真实订单数据计算）
-            const xData = [];
-            const yData = [];
-            let titleText = "";
-
-            // 根据不同维度生成模拟数据（实际项目可替换为真实数据逻辑）
-            switch (dimension) {
-                case "day":
-                    titleText = `当日${statType === "profitValue" ? "利润" : statType === "orderCount" ? "订单数量" : "利润率"}统计`;
-                    xData.push(document.getElementById("statDay").value);
-                    yData.push(statType === "profitValue" ? 1286.50 : statType === "orderCount" ? 26 : 18.5);
-                    break;
-                case "week":
-                    titleText = `当周${statType === "profitValue" ? "利润" : statType === "orderCount" ? "订单数量" : "利润率"}统计`;
-                    xData = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"];
-                    yData = statType === "profitValue" ? [356.2, 428.8, 299.5, 512.3, 389.7, 456.9, 621.1] : 
-                            statType === "orderCount" ? [4, 6, 3, 7, 5, 8, 9] : [15.2, 17.8, 14.5, 19.3, 16.7, 18.9, 20.1];
-                    break;
-                case "month":
-                    titleText = `当月${statType === "profitValue" ? "利润" : statType === "orderCount" ? "订单数量" : "利润率"}统计`;
-                    xData = ["1日", "5日", "10日", "15日", "20日", "25日", "30日"];
-                    yData = statType === "profitValue" ? [890.5, 1256.3, 1890.7, 2560.9, 3120.2, 3680.5, 4250.8] : 
-                            statType === "orderCount" ? [12, 18, 26, 35, 42, 58, 66] : [16.8, 17.5, 18.2, 19.5, 20.1, 21.8, 22.5];
-                    break;
-                case "custom":
-                    const startDate = document.getElementById("statStartDate").value;
-                    const endDate = document.getElementById("statEndDate").value;
-                    titleText = `${startDate} 至 ${endDate} ${statType === "profitValue" ? "利润" : statType === "orderCount" ? "订单数量" : "利润率"}统计`;
-                    // 生成日期区间数据（简化处理，实际可按天拆分）
-                    xData = [startDate, endDate];
-                    yData = statType === "profitValue" ? [2560.8, 4890.5] : statType === "orderCount" ? [36, 68] : [18.2, 20.8];
-                    break;
-            }
-
-            // 更新图表配置
-            const option = {
-                title: {
-                    text: titleText,
-                    left: "center"
-                },
-                tooltip: {
-                    trigger: "axis"
-                },
-                legend: {
-                    top: "bottom",
-                    left: "center",
-                    data: [statType === "profitValue" ? "利润（¥）" : statType === "orderCount" ? "订单数量" : "利润率（%）"]
-                },
-                grid: {
-                    left: "3%",
-                    right: "4%",
-                    bottom: "15%",
-                    containLabel: true
-                },
-                xAxis: {
-                    type: "category",
-                    data: xData
-                },
-                yAxis: {
-                    type: "value",
-                    name: statType === "profitValue" ? "金额（¥）" : statType === "orderCount" ? "数量" : "利率（%）"
-                },
-                series: [{
-                    name: statType === "profitValue" ? "利润（¥）" : statType === "orderCount" ? "订单数量" : "利润率（%）",
-                    type: "bar",
-                    data: yData,
-                    itemStyle: {
-                        color: "#007bff"
-                    }
-                }]
-            };
-
-            myChart.setOption(option);
-            // 窗口大小变化时自适应
-            window.addEventListener("resize", function() {
-                myChart.resize();
-            });
-        }
-    </script>
-</body>
-</html>
+            document.getElementById("thbProfitCny").value = profit.to
